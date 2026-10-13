@@ -1183,12 +1183,8 @@ def employee_monthly(
 
 # GET   /analytics/departments/summary
 import calendar
-import re
-from datetime import date
-from decimal import Decimal, ROUND_HALF_UP
-from typing import Optional
 
-from fastapi import HTTPException, Query
+
 
 
 def round_half_up(value, places=2):
@@ -1526,10 +1522,9 @@ def department_summary(
 
 
 # GET   /analytics/leaderboard/late
-from datetime import date
-from typing import Optional
 
-from fastapi import Query
+
+
 
 
 @app.get("/analytics/leaderboard/late")
@@ -2029,8 +2024,6 @@ def department_trend(
 
 
 # GET   /admin/explain/{endpoint}
-from fastapi import HTTPException
-from pymongo.errors import PyMongoError
 
 
 @app.get("/admin/explain/{endpoint}")
