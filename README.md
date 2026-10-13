@@ -221,9 +221,8 @@ A plain aggregation over `attendance_logs` would silently drop employees who nev
 **Your Name**
 Backend Developer
 
-- GitHub: [@your-username](https://github.com/your-username)
-- LinkedIn: [your-profile](https://linkedin.com/in/your-profile)
-- Email: your.email@example.com
+
+- Email: shahbazminto23@gmail.com
 
 ---
 
