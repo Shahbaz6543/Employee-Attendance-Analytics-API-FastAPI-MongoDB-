@@ -34,13 +34,25 @@ load_dotenv()
 UTC = timezone.utc
 IST = timezone(timedelta(hours=5, minutes=30))
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DB = os.getenv("MONGO_DB")
+
+if not MONGO_URI or not MONGO_DB:
+    raise RuntimeError("Missing MONGO_URI or MONGO_DB environment variables")
+
 client = MongoClient(
-    os.getenv("MONGO_URI", "mongodb://localhost:27017"),
+    MONGO_URI,
     tz_aware=True,
     tzinfo=UTC,
     serverSelectionTimeoutMS=3000,
 )
-db = client[os.getenv("MONGO_DB", "attendance_db")]
+
+db = client[MONGO_DB]
 
 app = FastAPI(title="Employee Attendance & Analytics API", version="2.0.0")
 
@@ -51,44 +63,38 @@ app = FastAPI(title="Employee Attendance & Analytics API", version="2.0.0")
 
 @app.on_event("startup")
 def create_indexes():
+
     db.employees.create_index(
         [("emp_code", 1)],
         unique=True,
         name="uq_employees_emp_code",
     )
+
+    db.employees.create_index(
+        [("department", 1), ("emp_code", 1)],
+        name="ix_employees_department_emp_code",
+    )
+
+    db.employees.create_index(
+        [("department", 1), ("joined_on", 1)],
+        name="idx_employees_department_joined",
+    )
+
     db.attendance_logs.create_index(
         [("emp_code", 1), ("date", 1)],
         unique=True,
         name="uq_attendance_emp_code_date",
     )
-    db.employees.create_index(
-        [("department", 1), ("emp_code", 1)],
-        name="ix_employees_department_emp_code",
-    )
+
     db.attendance_logs.create_index(
         [("date", -1)],
         name="ix_attendance_date",
     )
+
     db.attendance_logs.create_index(
         [("status", 1), ("date", -1)],
         name="ix_attendance_status_date",
     )
-    db["employees"].create_index(
-    [("emp_code", 1)],
-    unique=True,
-    name="uq_employees_emp_code",
-)
-
-db["employees"].create_index(
-    [("department", 1), ("joined_on", 1)],
-    name="idx_employees_department_joined",
-)
-
-db["attendance"].create_index(
-    [("emp_code", 1), ("date", 1)],
-    name="idx_attendance_emp_date",
-)
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -757,7 +763,7 @@ def employee_monthly(
     # ---------------------------------------------------------
     # 2. Check whether the employee exists
     # ---------------------------------------------------------
-    employee = employees.find_one(
+    employee = employee.find_one(
         {"emp_code": emp_code},
         {"_id": 0, "emp_code": 1}
     )
@@ -1133,7 +1139,7 @@ def employee_monthly(
     # ---------------------------------------------------------
     # 4. Execute aggregation
     # ---------------------------------------------------------
-    result = next(employees.aggregate(pipeline), None)
+    result = next(employee.aggregate(pipeline), None)
 
     if result is None:
         raise HTTPException(
